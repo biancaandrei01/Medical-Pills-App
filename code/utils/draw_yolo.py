@@ -1,4 +1,5 @@
 import cv2
+import matplotlib.pyplot as plt
 
 
 def draw_yolo_labels(image_path, labels_path, output_path=None):
@@ -32,10 +33,12 @@ def draw_yolo_labels(image_path, labels_path, output_path=None):
     if output_path:
         cv2.imwrite(output_path, image)
     else:
-        cv2.imshow('Image with YOLO Labels', image)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        # cv2.imshow('Image with YOLO Labels', image)
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
+        plt.figure(), plt.imshow(image), plt.show()
 
 
 # Example usage
-draw_yolo_labels('', '') # add your image and label path
+draw_yolo_labels('C:\\Users\\Bianca\\PycharmProjects\\Medical-Pills-App\\datasets\\poze_pastile_dataset\\images\\DSC02374.JPG',
+                 'C:\\Users\\Bianca\\PycharmProjects\\Medical-Pills-App\\datasets\\poze_pastile_dataset\\labels\\DSC02374.txt') # add your image and label path

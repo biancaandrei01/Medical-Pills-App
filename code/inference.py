@@ -5,7 +5,7 @@ if __name__ == "__main__":
     # Load a model
     model = YOLO("C:\\Users\\Bianca\\PycharmProjects\\Medical-Pills-App\\checkpoints\\test\\weights\\best.pt")
     # Define the path to the test images folder
-    test_images_folder = "C:\\Users\\Bianca\\PycharmProjects\\Medical-Pills-App\\mask-dataset\\images\\test"
+    test_images_folder = "C:\\Users\\Bianca\\PycharmProjects\\Medical-Pills-App\\datasets\\pills-dataset\\images\\test"
 
     # Get all image file paths in the test set folder (supports .jpg, .jpeg, .png)
     supported_formats = ('.jpg', '.jpeg', '.png')

@@ -7,11 +7,11 @@ if __name__ == "__main__":
     wandb.init(
         entity="transformers_3",
         project="Medical Pills App",  # Project name in wandb
-        name="test",  # Name of the run
+        name="poze_pastile1",  # Name of the run
         config={
-            "epochs": 200,
+            "epochs": 100,
             "batch_size": 10,
-            "model": "last.pt",  # You can change this to other YOLOv8 variants
+            "model": "yolo11n.pt",  # You can change this to other YOLOv8 variants
         }
     )
 
@@ -23,14 +23,14 @@ if __name__ == "__main__":
     # Start training
     results = model.train(
         # Path to the dataset.yaml file
-        data='C:\\Users\\Bianca\\PycharmProjects\\Medical-Pills-App\\mask-dataset\\data.yaml',
+        data='C:\\Users\\Bianca\\PycharmProjects\\Medical-Pills-App\\datasets\\splitted_poze_pastile_dataset\\data.yaml',
         epochs=100,  # Number of epochs
-        batch=10,  # Batch size
+        batch=5,  # Batch size
         save=True,  # Save checkpoints after each epoch
         device=device,
         # Directory where the model checkpoints will be saved
-        project="C:\\Users\\Bianca\\PycharmProjects\\Medical-Pills-App\\checkpoints",
-        name="test",  # Name of the training run folder
+        project="../checkpoints",
+        name="poze_pastile1",  # Name of the training run folder
         optimizer='Adam',  # Optional: you can specify optimizer
         workers=2,  # Number of data loading workers
         verbose=True,  # Display training progress
