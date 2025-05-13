@@ -1,28 +1,13 @@
-import os
 import glob
-from pathlib import Path
-import hashlib
-import numpy as np
-from PIL import Image
+import os
 import shutil
+from pathlib import Path
 
 
 def get_label_content(label_path):
     """Read and return the content of label file"""
     with open(label_path, 'r') as f:
         return f.read().strip()
-
-
-def get_image_hash(image_path):
-    """Calculate image hash to compare images"""
-    try:
-        with Image.open(image_path) as img:
-            # Convert to numpy array and flatten
-            img_array = np.array(img)
-            return hashlib.md5(img_array.tobytes()).hexdigest()
-    except Exception as e:
-        print(f"Error processing image {image_path}: {e}")
-        return None
 
 
 def remove_duplicates(dataset_root):
@@ -60,13 +45,8 @@ def remove_duplicates(dataset_root):
             print(f"Warning: No image file found for {label_name}")
             continue
 
-        # Calculate image hash
-        img_hash = get_image_hash(image_path)
-        if img_hash is None:
-            continue
-
-        # Create a unique key combining label content and image hash
-        unique_key = f"{label_content}"
+        # Create a unique key combining label content and label name
+        unique_key = f"{label_content}_{label_name.split('--')[0]}"
 
         if unique_key in label_dict:
             # This is a duplicate
@@ -94,7 +74,7 @@ def remove_duplicates(dataset_root):
 
 if __name__ == "__main__":
     # Replace this path with your dataset root directory
-    dataset_root = r"C:\Users\Bianca\PycharmProjects\Medical-Pills-App\datasets\robo"
+    dataset_root = r"C:\Users\Bianca\PycharmProjects\Medical-Pills-App\datasets\robo_nefiltrat"
 
     # Confirm before proceeding
     print("This script will move duplicate files to a backup directory.")
