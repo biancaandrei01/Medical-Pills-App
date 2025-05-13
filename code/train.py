@@ -7,11 +7,17 @@ if __name__ == "__main__":
     wandb.init(
         entity="transformers_3",
         project="Medical Pills App",  # Project name in wandb
-        name="poze_pastile1",  # Name of the run
+        name="robo_yolo_Adam_augGeoS",  # Name of the run
         config={
+            "dataset": "robo",
+            "model": "yolo11n.pt",
+            "pretrained": True,
             "epochs": 100,
             "batch_size": 10,
-            "model": "yolo11n.pt",  # You can change this to other YOLOv8 variants
+            "workers": 2,
+            "optimizer": "Adam",
+            "img_size": 800,
+            "augmentation": "degrees=180, flipud=0.5, fliplr=0.5"
         }
     )
 
@@ -23,18 +29,34 @@ if __name__ == "__main__":
     # Start training
     results = model.train(
         # Path to the dataset.yaml file
-        data='C:\\Users\\Bianca\\PycharmProjects\\Medical-Pills-App\\datasets\\splitted_poze_pastile_dataset\\data.yaml',
-        epochs=100,  # Number of epochs
-        batch=5,  # Batch size
-        save=True,  # Save checkpoints after each epoch
+        data=r'C:\Users\Bianca\PycharmProjects\Medical-Pills-App\datasets\splitted_robo\data.yaml',
+        # resume=True, # Continue training from checkpoint
+        project="../checkpoints", # Directory where the model checkpoints will be saved
+        name="robo_yolo_Adam_augGeoS",  # Name of the training run folder
         device=device,
-        # Directory where the model checkpoints will be saved
-        project="../checkpoints",
-        name="poze_pastile1",  # Name of the training run folder
-        optimizer='Adam',  # Optional: you can specify optimizer
-        workers=2,  # Number of data loading workers
         verbose=True,  # Display training progress
-        imgsz=800
+        save=True,  # Save checkpoints after each epoch
+        pretrained=True,  # Determines whether to start training from a pretrained model
+        epochs=100,  # Number of epochs
+        batch=10,  # set as an integer (e.g., batch=16), auto mode for 60% GPU memory utilization (batch=-1), or auto mode with specified utilization fraction (batch=0.70).
+        workers=2,  # Number of data loading workers
+        optimizer='Adam',  # Options include SGD, Adam, AdamW, NAdam, RAdam, RMSProp etc., or auto for automatic selection based on model configuration
+        imgsz=800,
+        close_mosaic=0,
+        # Color space augumentations
+        hsv_h=0, # nu modificam, e imp nuanta
+        hsv_s=0, # putem modifica putin saturatia un 0.5 max (-0.5, 0.5)
+        hsv_v=0, # putem modifica putin luminozitatea un 0.5 max (-0.5, 0.5)
+        # Geometric transformations
+        degrees=180, # putem pune 180 (img rotita intre -180 si 180)
+        translate=0, # nu e de modificat, poate disparea pastila din img
+        scale=0, # nu e de modificat, poate disparea pastila din img
+        shear=0, # merge modificat
+        perspective=0, # merge modificat
+        flipud=0.5, # valoarea e prob de a fi flipped upside->down imaginea
+        fliplr=0.5, # valoarea e prob de a fi flipped left->right imaginea
+        mosaic=0, # nu e de modificat, noi avem o pastila per imagine
+        erasing=0 # nu e de modificat, poate disparea pastila din img
     )
 
     # Finish the wandb run

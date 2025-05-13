@@ -10,8 +10,6 @@ def load_model(checkpoint_path, model_type):
         return YOLO(checkpoint_path)
     elif model_type == '?Sebi':
         return None
-    elif model_type == '?Adelina':
-        return None
 
 #todo inference for other models
 def inference(model_type, model, input_image_path):
@@ -19,8 +17,6 @@ def inference(model_type, model, input_image_path):
         results = model.predict(source=input_image_path, conf=0.5, iou=0.45, device='cuda:0')
         return results
     elif model_type == '?Sebi':
-        return None
-    elif model_type == '?Adelina':
         return None
 
 
@@ -59,7 +55,7 @@ class MedicalPillsApp:
         frame.grid_columnconfigure(3, weight=1)
 
         ttk.Label(frame, text="Model Type:").grid(row=2, column=0, sticky="w", pady=5)
-        for i, model in enumerate(['YOLO', '?Sebi', '?Adelina']):
+        for i, model in enumerate(['YOLO', '?Sebi']):
             ttk.Radiobutton(frame, text=model, variable=self.model_type, value=model).grid(row=2, column=i + 1, sticky="ew", pady=5)
 
         ttk.Button(frame, text="Apply Model", command=self.load_and_apply_model).grid(row=3, column=0, sticky="w", pady=5)
@@ -96,7 +92,7 @@ class MedicalPillsApp:
 
         model_type = self.model_type.get()
         #todo edit checkpoint_path
-        checkpoint_path = r"C:\Users\Bianca\PycharmProjects\Medical-Pills-App\checkpoints\pastile_complet\weights\best.pt"
+        checkpoint_path = r"C:\Users\Bianca\PycharmProjects\Medical-Pills-App\checkpoints\lab_yolo_Adam_augColGeoS\weights\best.pt"
 
         try:
             self.model = load_model(checkpoint_path, model_type)

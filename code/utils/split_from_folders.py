@@ -4,28 +4,38 @@ from glob import glob
 from sklearn.model_selection import train_test_split
 
 if __name__ == "__main__":
-    source_folder = r'D:\~Pastile\toate imaginile complete\toate imaginile complete'
-    output_dir = r'D:\~Pastile\toate imaginile complete'
+    source_folder = r'C:\Users\Bianca\PycharmProjects\Medical-Pills-App\datasets\shifted35_robo'
+    source_folder_2 = r'C:\Users\Bianca\PycharmProjects\Medical-Pills-App\datasets\lab'
+    output_dir = r'C:\Users\Bianca\PycharmProjects\Medical-Pills-App\datasets\splitted_lab_robo'
 
     for split in ['train', 'val']:
         os.makedirs(os.path.join(output_dir, 'images', split), exist_ok=True)
         os.makedirs(os.path.join(output_dir, 'labels', split), exist_ok=True)
 
-    image_extensions = ['*.jpg', '*.jpeg', '*.png']
     all_images = []
+    all_images_2 = []
     all_labels = []
 
-    for ext in image_extensions:
-        images = glob(os.path.join(source_folder, ext))
-        all_images.extend(images)
+    images = glob(os.path.join(source_folder, '*.jpg'))
+    all_images.extend(images)
+
+    images_2 = glob(os.path.join(source_folder_2, '*.jpg'))
+    all_images_2.extend(images_2)
 
     if not all_images:
         raise ValueError("No images found! Check source folder paths and extensions.")
 
     for img in all_images:
         basename = os.path.basename(img)
-        label = basename.split('_')[1]  # Extract label from filename
+        label = basename.split('_')[0]  # Extract label from filename !!! [1] for Lab dataset
         all_labels.append(label)
+
+    for img in all_images_2:
+        basename = os.path.basename(img)
+        label_2 = basename.split('_')[1]  # Extract label from filename !!! [0] for RoboFlow dataset
+        all_labels.append(label_2)
+
+    all_images.extend(all_images_2)
 
     images_train, images_val, labels_train, labels_val = train_test_split(
         all_images, all_labels, test_size=0.3, stratify=all_labels, random_state=42)
