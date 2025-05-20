@@ -4,6 +4,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from PIL import Image
+from matplotlib import pyplot as plt
 from torchvision import transforms, models
 from ultralytics import YOLO
 
@@ -42,6 +43,10 @@ class YoloResNetClassifier(torch.nn.Module):
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ])
 
+        transform_crop = transforms.Compose([
+            transforms.Resize((224, 224)),
+        ])
+
         # YOLO Predictions (bounding boxes + features)
         results = self.yolo.predict(source=image, conf=0.5, iou=0.45, device='cuda', save=False)
 
@@ -56,6 +61,11 @@ class YoloResNetClassifier(torch.nn.Module):
                 img = Image.open(image).convert('RGB')
                 img = transform(img)
                 cropped_img = img[:, y1:y2, x1:x2]  # Crop bounding box region (assumes image is a tensor)
+                cropped_img = transform_crop(cropped_img)
+
+                # for plotting crops, you need to remove normalising
+                # pl = cropped_img.cpu().numpy().transpose(1, 2, 0)
+                # plt.figure(), plt.imshow(pl), plt.show()
 
                 # Run cropped images through ResNet for classification
                 cropped_images_tensor = cropped_img.unsqueeze(0).to('cuda')  # Convert list to tensor
@@ -74,6 +84,7 @@ class YoloResNetClassifier(torch.nn.Module):
                     img = Image.open(image).convert('RGB')
                     img = transform(img)
                     cropped_img = img[:, y1:y2, x1:x2]  # Crop bounding box region (assumes image is a tensor)
+                    cropped_img = transform_crop(cropped_img)
 
                     # for plotting crops, you need to remove normalising
                     # pl = cropped_img.cpu().numpy().transpose(1, 2, 0)
