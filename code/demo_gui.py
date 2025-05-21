@@ -3,12 +3,26 @@ from tkinter import filedialog, ttk
 
 from PIL import Image, ImageTk, ImageDraw
 from ultralytics import YOLO
+from torchvision import transforms, models
+import torch.nn as nn
+import torch
 
 def load_model(checkpoint_path):
-    return YOLO(checkpoint_path)
+    yolo_path = checkpoint_path.get("YOLO")
+    yolo = YOLO(yolo_path)
+    yolo.to('cuda')
+    yolo.fuse()
 
-def inference(model, input_image_path):
-    results = model.predict(source=input_image_path, conf=0.5, iou=0.45, device='cuda:0')
+    resNet_path = checkpoint_path.get("ResNet")
+    resNet = models.resnet50(weights = None)
+    resNet.fc = nn.Linear(resNet.fc.in_features, checkpoint_path.get("num_classes"))  # Update the final layer
+    resNet.load_state_dict(torch.load(resNet_path, map_location='cuda')['model_state_dict'])
+    resNet.to('cuda')
+    resNet.eval()
+    return yolo, resNet
+
+def inference(yolo, input_image_path):
+    results = yolo.predict(source=input_image_path, conf=0.5, iou=0.45, device='cuda', save=False)
     return results
 
 
@@ -21,7 +35,8 @@ class MedicalPillsApp:
         self.loading_label = None
         self.root = root
         self.root.title("Medical Pills App")
-        self.model = None
+        self.yolo = None
+        self.resNet = None
         self.original_image = None
         self.image_path = None
         self.setup_ui()
@@ -34,24 +49,48 @@ class MedicalPillsApp:
         self.root.grid_rowconfigure(0, weight=1)
         self.root.grid_columnconfigure(0, weight=1)
 
-        ttk.Button(frame, text="Load Image", command=self.open_image).grid(row=0, column=0, sticky="w", pady=5)
-
+        ttk.Button(frame, text="Load Image", command=self.open_image).grid(row=0, column=0, sticky="w")
 
         self.image_label = ttk.Label(frame)
         self.image_label.grid(row=1, column=0, sticky="nsew", pady=5)
-        self.image_label.grid_propagate(True)
 
         frame.grid_rowconfigure(1, weight=1)
         frame.grid_columnconfigure(0, weight=1)
 
-        ttk.Button(frame, text="Apply Model", command=self.load_and_apply_model).grid(row=2, column=0, sticky="w", pady=5)
+        self.experiment_checkpoints = {
+            "lab dataset": {
+                "YOLO": r"C:\Users\Bianca\PycharmProjects\Medical-Pills-App\checkpoints\yolo_exp\lab_yolo_Adam_augColGeoS\weights\best.pt",
+                "ResNet" : r"C:\Users\Bianca\PycharmProjects\Medical-Pills-App\checkpoints\classificator_exp\lab_resNet_augGeoS_best.pth",
+                "num_classes": 35
+            },
+            "robo dataset": {
+                "YOLO": r"C:\Users\Bianca\PycharmProjects\Medical-Pills-App\checkpoints\yolo_exp\robo_yolo_Adam_augGeoS\weights\best.pt",
+                "ResNet": r"C:\Users\Bianca\PycharmProjects\Medical-Pills-App\checkpoints\classificator_exp\robo_resNet_augColGeoS_best.pth",
+                "num_classes": 30
+            },
+            "lab & robo dataset": {
+                "YOLO": r"C:\Users\Bianca\PycharmProjects\Medical-Pills-App\checkpoints\yolo_exp\lab_robo_yolo_Adam_augGeoS\weights\best.pt",
+                "ResNet": r"C:\Users\Bianca\PycharmProjects\Medical-Pills-App\checkpoints\classificator_exp\lab_robo_resNet_noAug_best.pth",
+                "num_classes": 65
+            }
+        }
+
+        self.selected_experiment = tk.StringVar()
+        self.selected_experiment.set("lab_robo best")
+
+        ttk.Label(frame, text="Select database used for training model:").grid(row=2, column=0, sticky="w", pady=5)
+        ttk.Combobox(frame, textvariable=self.selected_experiment,
+                     values=list(self.experiment_checkpoints.keys())).grid(row=3, column=0, sticky="w", pady=5)
+
+        ttk.Button(frame, text="Apply Model", command=self.load_and_apply_model).grid(row=4, column=0, sticky="w",
+                                                                                      pady=5)
 
         self.loading_label = ttk.Label(frame, text="Loading...")
-        self.loading_label.grid(row=3, column=0, sticky="w", pady=5)
+        self.loading_label.grid(row=5, column=0, sticky="w", pady=5)
         self.loading_label.grid_remove()
 
         self.output_label = ttk.Label(frame, text="", wraplength=600, justify="left")
-        self.output_label.grid(row=4, column=0, columnspan=4, sticky="w", pady=10)
+        self.output_label.grid(row=6, column=0, columnspan=4, sticky="w", pady=10)
         self.output_label.grid_remove()
 
     def open_image(self):
@@ -65,41 +104,43 @@ class MedicalPillsApp:
     def display_image(self, image):
         max_size = (800, 600)
         image_for_display = image.copy()
-        image_for_display.thumbnail(max_size, Image.Resampling.LANCZOS)
+        image_for_display.thumbnail(size=max_size, resample=Image.Resampling.BICUBIC, reducing_gap=2.0)
         self.photo = ImageTk.PhotoImage(image_for_display)
         self.image_label.configure(image=self.photo)
         self.image_label.image = self.photo  # keep a reference
-        
+
         # Calculate window size based on image dimensions
         # Add padding for buttons and other widgets
         window_width = image_for_display.width + 40  # 20px padding on each side
-        window_height = image_for_display.height + 150  # Extra space for buttons and labels
-        
+        window_height = image_for_display.height + 200  # Extra space for buttons and labels
+
         # Get screen dimensions
         screen_width = self.root.winfo_screenwidth()
         screen_height = self.root.winfo_screenheight()
-        
+
         # Ensure window size doesn't exceed screen size
         window_width = min(window_width, screen_width)
         window_height = min(window_height, screen_height)
-        
+
         # Calculate center position
         x = (screen_width - window_width) // 2
         y = (screen_height - window_height) // 2
-        
+
         # Set window size and position
         self.root.geometry(f"{window_width}x{window_height}+{x}+{y}")
+
 
     def load_and_apply_model(self):
         if not self.original_image:
             return
-        self.loading_label.grid(row=4, column=0, sticky="ew", pady=5)
+        self.loading_label.grid(row=5, column=0, sticky="ew", pady=5)
         self.root.update()
 
-        checkpoint_path = r"C:\Users\Bianca\PycharmProjects\Medical-Pills-App\checkpoints\lab_yolo_Adam_augColGeoS\weights\best.pt"
+        checkpoint_key = self.selected_experiment.get()
+        checkpoint_path = self.experiment_checkpoints.get(checkpoint_key)
 
         try:
-            self.model = load_model(checkpoint_path)
+            self.yolo, self.resNet = load_model(checkpoint_path)
             self.update_image()
         except Exception as e:
             print(f"Failed to load model: {e}")
@@ -108,7 +149,17 @@ class MedicalPillsApp:
 
     def update_image(self):
         try:
-            results = inference(self.model, self.image_path)
+            # Define transformations
+            transform = transforms.Compose([
+                transforms.ToTensor(),
+                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+            ])
+
+            transform_crop = transforms.Compose([
+                transforms.Resize((224, 224)),
+            ])
+
+            results = inference(self.yolo, self.image_path)
             image = self.original_image.copy()
             draw = ImageDraw.Draw(image)
 
@@ -118,10 +169,25 @@ class MedicalPillsApp:
                 names = result.names
 
                 for box in boxes:
-                    x1, y1, x2, y2 = box.xyxy[0].tolist()
+                    x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())  # Extract bounding box coordinates
+                    img = transform(image)
+                    cropped_img = img[:, y1:y2, x1:x2]  # Crop bounding box region (assumes image is a tensor)
+                    cropped_img = transform_crop(cropped_img)
+                    # for plotting crops, you need to remove normalising
+                    # pl = cropped_img.cpu().numpy().transpose(1, 2, 0)
+                    # plt.figure(), plt.imshow(pl), plt.show()
+
+                    # Run cropped images through ResNet for classification
+                    cropped_images_tensor = cropped_img.unsqueeze(0).to('cuda')  # Convert list to tensor
+                    # Make prediction
+                    with torch.no_grad():
+                        outputs = self.resNet(cropped_images_tensor)
+                        _, predicted = torch.max(outputs, 1)
+                        class_idx = predicted.item()
+
                     cls_id = int(box.cls[0])
                     conf = float(box.conf[0])
-                    label = f"{names[cls_id]}: {conf:.2f}"
+                    label = f"YOLO >> Class: {names[cls_id]}, Confidence: {conf:.2f}\n\nResNet >> Class: {names[class_idx]}"
 
                     draw.rectangle([x1, y1, x2, y2], outline='green', width=10)
                     output_lines.append(label)
@@ -133,7 +199,8 @@ class MedicalPillsApp:
                 self.output_label.config(text=label_text)
                 self.output_label.grid()
             else:
-                self.output_label.grid_remove()
+                self.output_label.config(text="No pills detected. Try a different image or experiment.")
+                self.output_label.grid()
 
         except Exception as e:
             print(f"Failed to apply model: {e}")
