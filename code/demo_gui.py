@@ -133,6 +133,7 @@ class MedicalPillsApp:
     def load_and_apply_model(self):
         if not self.original_image:
             return
+        self.output_label.grid_remove()
         self.loading_label.grid(row=5, column=0, sticky="ew", pady=5)
         self.root.update()
 
