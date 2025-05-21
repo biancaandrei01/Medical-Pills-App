@@ -78,7 +78,7 @@ class MedicalPillsApp:
         self.selected_experiment = tk.StringVar()
         self.selected_experiment.set("lab & robo dataset")
 
-        ttk.Label(frame, text="Select database used for training model:").grid(row=2, column=0, sticky="w", pady=5)
+        ttk.Label(frame, text="Select dataset used for training model:").grid(row=2, column=0, sticky="w", pady=5)
         ttk.Combobox(frame, textvariable=self.selected_experiment,
                      values=list(self.experiment_checkpoints.keys())).grid(row=3, column=0, sticky="w", pady=5)
 
@@ -190,7 +190,9 @@ class MedicalPillsApp:
                     conf = float(box.conf[0])
                     label = f"YOLO >> Class: {names[cls_id]}, Confidence: {conf:.2f}\n\nResNet >> Class: {names[class_idx]}"
 
-                    draw.rectangle([x1, y1, x2, y2], outline='green', width=10)
+                    line_width = max(1, int(min(image.width,
+                                                image.height) * 0.001))  # Adapt line width based on image size
+                    draw.rectangle([x1, y1, x2, y2], outline='green', width=line_width)
                     output_lines.append(label)
 
             self.display_image(image)
