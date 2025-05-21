@@ -76,7 +76,7 @@ class MedicalPillsApp:
         }
 
         self.selected_experiment = tk.StringVar()
-        self.selected_experiment.set("lab_robo best")
+        self.selected_experiment.set("lab & robo dataset")
 
         ttk.Label(frame, text="Select database used for training model:").grid(row=2, column=0, sticky="w", pady=5)
         ttk.Combobox(frame, textvariable=self.selected_experiment,
