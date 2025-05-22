@@ -7,9 +7,9 @@ if __name__ == "__main__":
     wandb.init(
         entity="transformers_3",
         project="Medical Pills App",  # Project name in wandb
-        name="robo_yolo_Adam_augGeoS",  # Name of the run
+        name="lab_robo_yolo_Adam_augCol",  # Name of the run
         config={
-            "dataset": "robo",
+            "dataset": "lab+robo",
             "model": "yolo11n.pt",
             "pretrained": True,
             "epochs": 100,
@@ -17,7 +17,7 @@ if __name__ == "__main__":
             "workers": 2,
             "optimizer": "Adam",
             "img_size": 800,
-            "augmentation": "degrees=180, flipud=0.5, fliplr=0.5"
+            "augmentation": "hsv_s=0.3, hsv_v=0.3"
         }
     )
 
@@ -29,10 +29,10 @@ if __name__ == "__main__":
     # Start training
     results = model.train(
         # Path to the dataset.yaml file
-        data=r'C:\Users\Bianca\PycharmProjects\Medical-Pills-App\datasets\splitted_robo\data.yaml',
+        data=r'C:\Users\Bianca\PycharmProjects\Medical-Pills-App\datasets\splitted_lab_robo\data.yaml',
         # resume=True, # Continue training from checkpoint
         project="../checkpoints", # Directory where the model checkpoints will be saved
-        name="robo_yolo_Adam_augGeoS",  # Name of the training run folder
+        name="lab_robo_yolo_Adam_augCol",  # Name of the training run folder
         device=device,
         verbose=True,  # Display training progress
         save=True,  # Save checkpoints after each epoch
@@ -45,16 +45,16 @@ if __name__ == "__main__":
         close_mosaic=0,
         # Color space augumentations
         hsv_h=0, # nu modificam, e imp nuanta
-        hsv_s=0, # putem modifica putin saturatia un 0.5 max (-0.5, 0.5)
-        hsv_v=0, # putem modifica putin luminozitatea un 0.5 max (-0.5, 0.5)
+        hsv_s=0.3, # putem modifica putin saturatia un 0.5 max (-0.5, 0.5)
+        hsv_v=0.3, # putem modifica putin luminozitatea un 0.5 max (-0.5, 0.5)
         # Geometric transformations
-        degrees=180, # putem pune 180 (img rotita intre -180 si 180)
+        degrees=0, # putem pune 180 (img rotita intre -180 si 180)
         translate=0, # nu e de modificat, poate disparea pastila din img
         scale=0, # nu e de modificat, poate disparea pastila din img
         shear=0, # merge modificat
         perspective=0, # merge modificat
-        flipud=0.5, # valoarea e prob de a fi flipped upside->down imaginea
-        fliplr=0.5, # valoarea e prob de a fi flipped left->right imaginea
+        flipud=0, # valoarea e prob de a fi flipped upside->down imaginea
+        fliplr=0, # valoarea e prob de a fi flipped left->right imaginea
         mosaic=0, # nu e de modificat, noi avem o pastila per imagine
         erasing=0 # nu e de modificat, poate disparea pastila din img
     )
