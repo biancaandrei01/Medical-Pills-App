@@ -1,15 +1,15 @@
+import os
+
+import pandas as pd
 import torch
 import torch.nn as nn
-from torchvision import transforms, models
-import matplotlib.pyplot as plt
-from PIL import Image
 import yaml
-import argparse
-import cv2
-import numpy as np
-import os
-import pandas as pd
+from PIL import Image
 from skimage import io
+from torchvision import transforms, models
+
+from utils import load_config
+
 
 def load_model(model_path, num_classes):
     # Initialize model
@@ -62,42 +62,39 @@ def predict(image_path, model_path, yaml_path):
         outputs = model(input_tensor)
         _, predicted = torch.max(outputs, 1)
         class_idx = predicted.item()
-    # image = Image.open(image_path).convert("RGB")
-    # plt.imshow(image)
-    # plt.title(f"Predicted: {class_names[class_idx]}")
-    # plt.axis('off')
-    # plt.show()
+
     return class_idx, class_names[class_idx]
 
 
 if __name__ == "__main__":
+    config = load_config.load_config()
 
-    #pt lab
-    # Image_path= r'C:\Users\Sebi\Desktop\train_robo\preprocessed_lab_pur\test\3_Ibusinus_Sus_Alb_BecBlitz_0.jpg'
-    # yaml_path= r'C:\Users\Sebi\Desktop\train_robo\splitted_lab\data.yaml'
-    # model_path= r'C:\Users\Sebi\Desktop\train_robo\preprocessed_lab_pur\best_robo_model.pth'
+    # for lab dataset
+    # Image_path= os.path.join(config["datasets"]["lab_robo"],"val" , "3_Ibusinus_Sus_Alb_BecBlitz_0.jpg")
+    # yaml_path= os.path.join(config["datasets"]["lab"], "data.yaml")
+    # model_path= config["checkpoints"]["lab_resnet"]
 
-    #pt robo
-    Image_path = r'C:\Users\Sebi\Desktop\train_robo\preprocessed_robo_pur\test\ParacetamolDecolgen_15_0.jpg'
-    yaml_path = r'C:\Users\Sebi\Desktop\train_robo\splitted_robo\data.yaml'
-    model_path = r'C:\Users\Sebi\Desktop\train_robo\preprocessed_robo_pur\best_robo_model_full_aug.pth'
+    # for robo dataset
+    Image_path = os.path.join(config["datasets"]["robo"], "val" , "ParacetamolDecolgen_15_0.jpg")
+    yaml_path = os.path.join(config["datasets"]["robo"], "data.yaml")
+    model_path = config["checkpoints"]["robo_resnet"]
 
-    path = r'C:\Users\Sebi\Desktop\train_robo\preprocessed_robo_pur\test'
-    poze = os.listdir(path)
+    # for robo_lab dataset
+    # Image_path = os.path.join(config["datasets"]["lab_robo"], "val" , "Gaszym_4_0.jpg")
+    # yaml_path = os.path.join(config["datasets"]["lab_robo"], "data.yaml")
+    # model_path = config["checkpoints"]["lab_robo_resnet"]
+
+    path = os.path.join(config["datasets"]["robo"], "val")
+    val_images = os.listdir(path)
 
     results=[]
-    for img_path in poze[:]:
+    for img_path in val_images[:]:
         img = io.imread(os.path.join(path, img_path))
         class_id, class_name = predict(os.path.join(path, img_path), model_path, yaml_path)
-        #print(img_path, " rezultat", class_id+1)
         results.append({"img_path": img_path, "class_name": class_name})
-    #pt robo_lab
-    # Image_path = r'C:\Users\Sebi\Desktop\train_robo\preprocessed_robo\test\Gaszym_4_0.jpg'
-    # yaml_path = r'C:\Users\Sebi\Desktop\train_robo\splitted_lab_robo\data.yaml'
-    # model_path = r'C:\Users\Sebi\Desktop\train_robo\preprocessed_robo\best_robo_model.pth'
 
     df = pd.DataFrame(results)
-    df.to_csv("predictii_nume.csv", index=False)
+    df.to_csv("name_predictions.csv", index=False)
     try:
         class_id, class_name = predict(Image_path,  model_path, yaml_path)
         print(f"Predicted Class ID: {class_id}")

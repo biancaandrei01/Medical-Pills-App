@@ -1,11 +1,14 @@
 from ultralytics import YOLO
 import os
+from utils import load_config
 
-if __name__ == "__main__":
+def inference():
+    config = load_config.load_config()
+
     # Load a model
-    model = YOLO(r"C:\Users\Bianca\PycharmProjects\Medical-Pills-App\checkpoints\lab_yolo_Adam_augColGeoS\weights\best.pt")
+    model = YOLO(config["checkpoints"]["lab_yolo"])
     # Define the path to the test images folder
-    test_images_folder = r"C:\Users\Bianca\PycharmProjects\Medical-Pills-App\datasets\splitted_lab\images\val"
+    test_images_folder = os.path.join(config["datasets"]["lab"], "images" , "val")
 
     # Get all image file paths in the test set folder (supports .jpg, .jpeg, .png)
     supported_formats = ('.JPG', '.jpeg', '.png')
@@ -22,8 +25,11 @@ if __name__ == "__main__":
             # result.show()  # Display result on the screen (optional)
             # Save the result to disk (optional)
             output_filename = os.path.join(
-                r"C:\Users\Bianca\PycharmProjects\Medical-Pills-App\inference",
+                config["inference"]["lab"],
                 os.path.basename(image_path))
             result.save(filename=output_filename)
 
         print(f"Inference done for {image_path}")
+
+if __name__ == "__main__":
+    inference()

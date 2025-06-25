@@ -1,36 +1,37 @@
+import os
+
+import cv2
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from PIL import Image
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, models
-import pandas as pd
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix, \
-    classification_report
-import matplotlib.pyplot as plt
-import numpy as np
-import os
-from PIL import Image
-import wandb
-import seaborn as sns
-import yaml
-import cv2
 
-# Configurații
-DATA_DIR = r"C:\Users\Sebi\Desktop\train_robo\preprocessed_lab_pur"
-YAML_PATH = os.path.join(r"C:\Users\Sebi\Desktop\train_robo\splitted_lab", 'data.yaml')
+import wandb
+from utils import load_config
+
+# Configs
+config = load_config.load_config()
+
+DATA_DIR = os.path.join(config["datasets"]["lab"])
+YAML_PATH = os.path.join(config["datasets"]["lab"], "data.yaml")
 BATCH_SIZE = 32
 EPOCHS = 100
 LR = 0.001
 IMG_SIZE = 224
 
-# Încarcă numele claselor din YAML
-with open(YAML_PATH, 'r') as f:
-    data_yaml = yaml.safe_load(f)
+# Load name of classes from yaml file
+data_yaml = load_config.load_config(YAML_PATH)
 class_names = data_yaml['names']
 NUM_CLASSES = len(class_names)
 
 
-# Transformare HSV personalizată
 class HSVTransform:
     def __call__(self, img):
         img = np.array(img)
@@ -41,7 +42,7 @@ class HSVTransform:
         return Image.fromarray(img)
 
 
-# Configurare Wandb
+# Wandb config
 config = {
     "batch_size": BATCH_SIZE,
     "epochs": EPOCHS,
@@ -52,9 +53,9 @@ config = {
 }
 
 wandb.init(
-    entity="transformers_3",
-    project="Medical Pills App",
-    name="ResNet-50-Lab-Full-Aug",
+    entity=config["wandb"]["entity"],
+    project=config["wandb"]["project"],
+    name=config["wandb"]["name"],
     config=config
 )
 
@@ -82,7 +83,7 @@ class RoboDataset(Dataset):
 
 
 def train():
-    # Transformări cu toate augmentările
+    # Data transformations
     train_transform = transforms.Compose([
         transforms.Resize((IMG_SIZE, IMG_SIZE)),
         transforms.RandomRotation(180),
@@ -99,9 +100,9 @@ def train():
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ])
 
-    # Încarcă date
+    # Data loading
     train_dataset = RoboDataset(
-        csv_path=os.path.join(DATA_DIR, 'csv', 'train.csv'),
+        csv_path=os.path.join(DATA_DIR, "csv", "train.csv"),
         split_type='train',
         transform=train_transform
     )
@@ -122,7 +123,7 @@ def train():
     model.fc = nn.Linear(model.fc.in_features, NUM_CLASSES)
     model = model.to(device)
 
-    # Optimizer și Loss
+    # Optimizer and loss
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=LR)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'max', patience=3)
@@ -162,7 +163,7 @@ def train():
                 all_preds.extend(preds.cpu().numpy())
                 all_labels.extend(labels.cpu().numpy())
 
-        # Calculează metrici
+        # Compute metrics
         train_loss = train_loss / len(train_loader.dataset)
         test_loss = test_loss / len(test_loader.dataset)
 
@@ -172,7 +173,7 @@ def train():
         f1 = f1_score(all_labels, all_preds, average='weighted')
         scheduler.step(f1)
 
-        # Logare Wandb
+        # Wandb logging
         wandb.log({
             "epoch": epoch,
             "train_loss": train_loss,
@@ -184,10 +185,10 @@ def train():
             "learning_rate": optimizer.param_groups[0]['lr']
         })
 
-        # Salvare model
+        # Saving model
         if f1 > best_f1:
             best_f1 = f1
-            model_path = os.path.join(DATA_DIR, 'best_robo_model_full_aug.pth')
+            model_path = os.path.join(config["checkpoints"]["root_resnet"], config["wandb"]["name"] + "_best.pth")
             torch.save({
                 'epoch': epoch,
                 'model_state_dict': model.state_dict(),
@@ -201,8 +202,8 @@ def train():
         print(f"Accuracy: {accuracy:.4f} | Precision: {precision:.4f} | Recall: {recall:.4f} | F1: {f1:.4f}")
         print("-" * 50)
 
-    # Evaluare finală
-    checkpoint = torch.load(os.path.join(DATA_DIR, 'best_robo_model_full_aug.pth'))
+    # Evaluation
+    checkpoint = torch.load(os.path.join(config["checkpoints"]["root_resnet"], config["wandb"]["name"] + "_best.pth"))
     model.load_state_dict(checkpoint['model_state_dict'])
 
     model.eval()
@@ -228,7 +229,7 @@ def train():
     wandb.log({"Confusion Matrix": wandb.Image(plt)})
     plt.close()
 
-    # Raport clasificare
+    # Raport
     # class_report = classification_report(all_labels, all_preds, target_names=class_names, output_dict=True)
     # wandb.log({"Classification Report": class_report})
 

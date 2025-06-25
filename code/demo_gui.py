@@ -6,6 +6,7 @@ from ultralytics import YOLO
 from torchvision import transforms, models
 import torch.nn as nn
 import torch
+from utils import load_config
 
 def load_model(checkpoint_path):
     yolo_path = checkpoint_path.get("YOLO")
@@ -57,21 +58,23 @@ class MedicalPillsApp:
         frame.grid_rowconfigure(1, weight=1)
         frame.grid_columnconfigure(0, weight=1)
 
+        config = load_config.load_config()
+
         self.experiment_checkpoints = {
             "lab dataset": {
-                "YOLO": r"C:\Users\Bianca\PycharmProjects\Medical-Pills-App\checkpoints\yolo_exp\lab_yolo_Adam_augColGeoS\weights\best.pt",
-                "ResNet" : r"C:\Users\Bianca\PycharmProjects\Medical-Pills-App\checkpoints\classificator_exp\lab_resNet_augGeoS_best.pth",
-                "num_classes": 35
+                "YOLO": config["checkpoints"]["lab_yolo"],
+                "ResNet" : config["checkpoints"]["lab_resnet"],
+                "num_classes": config["num_classes"]["lab"]
             },
             "robo dataset": {
-                "YOLO": r"C:\Users\Bianca\PycharmProjects\Medical-Pills-App\checkpoints\yolo_exp\robo_yolo_Adam_augGeoS\weights\best.pt",
-                "ResNet": r"C:\Users\Bianca\PycharmProjects\Medical-Pills-App\checkpoints\classificator_exp\robo_resNet_augColGeoS_best.pth",
-                "num_classes": 30
+                "YOLO": config["checkpoints"]["robo_yolo"],
+                "ResNet": config["checkpoints"]["robo_resnet"],
+                "num_classes": config["num_classes"]["robo"]
             },
             "lab & robo dataset": {
-                "YOLO": r"C:\Users\Bianca\PycharmProjects\Medical-Pills-App\checkpoints\yolo_exp\lab_robo_yolo_Adam_augGeoS\weights\best.pt",
-                "ResNet": r"C:\Users\Bianca\PycharmProjects\Medical-Pills-App\checkpoints\classificator_exp\lab_robo_resNet_noAug_best.pth",
-                "num_classes": 65
+                "YOLO": config["checkpoints"]["lab_robo_yolo"],
+                "ResNet": config["checkpoints"]["lab_robo_resnet"],
+                "num_classes": config["num_classes"]["lab_robo"]
             }
         }
 
