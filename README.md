@@ -53,7 +53,7 @@ To address these limitations, we undertook a multi-faceted approach:
 - **Core Libraries:** PyTorch, Pandas, NumPy, OpenCV
 - **ML Models:** YOLOv11, ResNet-50
 - **Data Annotation:** `labelImg`
-- **Experiment Tracking:** Weights & Biases
+- **Experiment Tracking:** **[Weights & Biases](https://wandb.ai/transformers_3/Medical%20Pills%20App)**
 - **GUI:** `tkinter`
 
 ---
