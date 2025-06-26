@@ -29,7 +29,7 @@ def train():
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     # Load the pre-trained model
-    model = YOLO(config["models"]["yolo11n.pt"])
+    model = YOLO(config["models"]["yolo"])
     model.to(device)
 
     # Start training
