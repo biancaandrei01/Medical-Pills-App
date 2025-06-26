@@ -1,9 +1,5 @@
 # Automatic Pill Detection and Classification
 
-[![Python Version](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/)
-[![Frameworks](https://img.shields.io/badge/Frameworks-PyTorch%20%7C%20YOLO%20%7C%20ResNet-orange.svg)](https://pytorch.org/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-
 This repository hosts the source code for an end-to-end deep learning system designed for pill detection and classification. The project covers the full development lifecycle, from data acquisition and annotation strategies to model training and evaluation, culminating in an interactive GUI for model testing. The code is publicly available here; however, the custom-built datasets and final model weights are private and not included in this repository.
 
 ---
